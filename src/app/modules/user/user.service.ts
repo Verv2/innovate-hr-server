@@ -7,7 +7,7 @@ import * as bcrypt from "bcrypt";
 import config from "../../../config";
 import emailSender from "../../../helpers/emailSender";
 
-const createAdmin = async (req: Request) => {
+const createUserIntoDB = async (req: Request) => {
   console.log(req.body);
 
   const existingUser = await prisma.user.findUnique({
@@ -45,18 +45,18 @@ const createAdmin = async (req: Request) => {
 
   await emailSender(
     userData.email,
+    ` 
+    <div>
+      <p>Dear User,</p>
+      <p>Your account has been created. Please login with the password: ${generatePassword}</p>
+      <p>Please do not share the password with anyone</p>
+    </div>
     `
-      <div>
-          <p>Dear User,</p>
-          <p>Your account has been created. Please login with the password: ${generatePassword}</p>
-          <p>Please do not share the password with anyone</p>
-      </div>
-      `
   );
 
   return result;
 };
 
 export const UserService = {
-  createAdmin,
+  createUserIntoDB,
 };

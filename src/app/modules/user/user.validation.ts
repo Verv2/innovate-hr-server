@@ -1,22 +1,15 @@
+import { UserRole } from "@prisma/client";
 import { z } from "zod";
 
-const createAdmin = z.object({
-  password: z.string({
-    required_error: "Password is required",
-  }),
-  admin: z.object({
-    name: z.string({
-      required_error: "Name is required!",
-    }),
+const createUserValidationSchema = z.object({
+  body: z.object({
     email: z.string({
       required_error: "Email is required!",
     }),
-    contactNumber: z.string({
-      required_error: "Contact Number is required!",
-    }),
+    role: z.nativeEnum(UserRole, { required_error: "Role is required!" }),
   }),
 });
 
-export const userValidation = {
-  createAdmin,
+export const UserValidation = {
+  createUserValidationSchema,
 };

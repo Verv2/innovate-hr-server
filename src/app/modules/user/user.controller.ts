@@ -5,8 +5,8 @@ import sendResponse from "../../../shared/sendResponse";
 import { UserService } from "./user.service";
 
 // request and response are handled by controller
-const createAdmin = catchAsync(async (req: Request, res: Response) => {
-  const result = await UserService.createAdmin(req);
+const createUser = catchAsync(async (req: Request, res: Response) => {
+  const result = await UserService.createUserIntoDB(req);
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
@@ -16,5 +16,5 @@ const createAdmin = catchAsync(async (req: Request, res: Response) => {
 });
 
 export const UserController = {
-  createAdmin,
+  createUser,
 };
