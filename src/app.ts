@@ -1,31 +1,37 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import express, { Application, Request, Response } from "express";
+import express, { Application, NextFunction, Request, Response } from "express";
 import cors from "cors";
 import router from "./app/routes";
-import globalErrorHandler from "./app/middlewares/globalErrorhandler";
-import notFound from "./app/middlewares/notFound";
+import httpStatus from "http-status";
+import globalErrorHandler from "./app/middlewares/globalErrorHandler";
 import cookieParser from "cookie-parser";
 
 const app: Application = express();
-
-//parsers
-app.use(express.json());
+app.use(cors());
 app.use(cookieParser());
 
-app.use(cors({ origin: ["http://localhost:5173"], credentials: true }));
-
-// application routes
-app.use("/api/v1", router);
+// parser
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 app.get("/", (req: Request, res: Response) => {
-  res.send("InnovateHr Server is running");
+  res.send({
+    message: "InnovateHR server is running!",
+  });
 });
 
-app.use(globalErrorHandler as any);
+app.use("/api/v1", router);
 
-//Not Found
-app.use(notFound as any);
+app.use(globalErrorHandler);
+
+app.use((req: Request, res: Response, next: NextFunction) => {
+  res.status(httpStatus.NOT_FOUND).json({
+    success: false,
+    message: "API NOT FOUND",
+    error: {
+      path: req.originalUrl,
+      message: "Your requested path is not found!",
+    },
+  });
+});
 
 export default app;
-
-// ! see: 11-9, 11-10 and so on

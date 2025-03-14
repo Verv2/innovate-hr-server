@@ -1,37 +1,20 @@
-import { Request, RequestHandler, Response } from "express";
-import { UserServices } from "./user.service";
-import sendResponse from "../../../utils/sendResponse";
+import { Request, Response } from "express";
+import { userService } from "./user.service";
+import catchAsync from "../../../shared/catchAsync";
 import httpStatus from "http-status";
-import catchAsync from "../../../utils/catchAsync";
+import sendResponse from "../../../shared/sendResponse";
 
-const createUser = catchAsync(async (req: Request, res: Response) => {
-  const { user: userData } = req.body;
-
-  // will call service function to send this data
-  const result = await UserServices.createUserIntoDB(userData);
-
-  //send response
+// request and response are handled by controller
+const createAdmin = catchAsync(async (req: Request, res: Response) => {
+  const result = await userService.createAdmin();
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "User is created successfully!",
+    message: "Admin Created successfully!",
     data: result,
   });
 });
 
-const getAllUsers: RequestHandler = catchAsync(async (req, res) => {
-  const result = await UserServices.getAllUsersFromDB(req.query);
-
-  sendResponse(res, {
-    statusCode: httpStatus.OK,
-    success: true,
-    message: "Users are retrieved successfully",
-    meta: result.meta,
-    data: result.result,
-  });
-});
-
-export const UserControllers = {
-  createUser,
-  getAllUsers,
+export const userController = {
+  createAdmin,
 };
