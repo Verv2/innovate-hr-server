@@ -5,6 +5,7 @@ import httpStatus from "http-status";
 import { generate } from "generate-password";
 import * as bcrypt from "bcrypt";
 import config from "../../../config";
+import emailSender from "../../../helpers/emailSender";
 
 const createAdmin = async (req: Request) => {
   console.log(req.body);
@@ -37,6 +38,23 @@ const createAdmin = async (req: Request) => {
     password: hashedPassword,
     role: req.body.role,
   };
+
+  const result = await prisma.user.create({
+    data: userData,
+  });
+
+  await emailSender(
+    userData.email,
+    `
+      <div>
+          <p>Dear User,</p>
+          <p>Your account has been created. Please login with the password: ${generatePassword}</p>
+          <p>Please do not share the password with anyone</p>
+      </div>
+      `
+  );
+
+  return result;
 };
 
 export const UserService = {
