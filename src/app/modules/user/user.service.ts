@@ -6,6 +6,7 @@ import { generate } from "generate-password";
 import * as bcrypt from "bcrypt";
 import config from "../../../config";
 import emailSender from "../../../helpers/emailSender";
+import { TUser } from "./user.interface";
 
 const createUserIntoDB = async (req: Request) => {
   console.log(req.body);
@@ -57,6 +58,37 @@ const createUserIntoDB = async (req: Request) => {
   return result;
 };
 
+const createUserProfileIntoDB = async (req: Request & { user?: TUser }) => {
+  if (!req.user) {
+    throw new Error("User information is missing.");
+  }
+
+  const userProfileData = {
+    email: req.user.email,
+    firstName: req.body.firstName,
+    lastName: req.body.lastName,
+    contactNumber: req.body.phoneNumber,
+    shiftStart: req.body.shiftStart,
+    shiftEnd: req.body.shiftEnd,
+    profilePhoto: req.file?.path || "",
+  };
+
+  const existingProfile = await prisma.profile.findUnique({
+    where: { email: req.user.email },
+  });
+
+  if (existingProfile) {
+    throw new ApiError(httpStatus.CONFLICT, "User Profile already created");
+  }
+
+  const result = await prisma.profile.create({
+    data: userProfileData,
+  });
+
+  return result;
+};
+
 export const UserService = {
   createUserIntoDB,
+  createUserProfileIntoDB,
 };
