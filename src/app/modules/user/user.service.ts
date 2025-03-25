@@ -63,16 +63,6 @@ const createUserProfileIntoDB = async (req: Request & { user?: TUser }) => {
     throw new Error("User information is missing.");
   }
 
-  const userProfileData = {
-    email: req.user.email,
-    firstName: req.body.firstName,
-    lastName: req.body.lastName,
-    contactNumber: req.body.phoneNumber,
-    shiftStart: req.body.shiftStart,
-    shiftEnd: req.body.shiftEnd,
-    profilePhoto: req.file?.path || "",
-  };
-
   const existingProfile = await prisma.profile.findUnique({
     where: { email: req.user.email },
   });
@@ -80,6 +70,16 @@ const createUserProfileIntoDB = async (req: Request & { user?: TUser }) => {
   if (existingProfile) {
     throw new ApiError(httpStatus.CONFLICT, "User Profile already created");
   }
+
+  const userProfileData = {
+    email: req.user.email,
+    firstName: req.body.firstName,
+    lastName: req.body.lastName,
+    contactNumber: req.body.contactNumber,
+    shiftStart: req.body.shiftStart,
+    shiftEnd: req.body.shiftEnd,
+    profilePhoto: req.file?.path || "",
+  };
 
   const result = await prisma.profile.create({
     data: userProfileData,
