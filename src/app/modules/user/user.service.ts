@@ -88,7 +88,34 @@ const createUserProfileIntoDB = async (req: Request & { user?: TUser }) => {
   return result;
 };
 
+const requestForLeave = async (req: Request & { user?: TUser }) => {
+  if (!req.user) {
+    throw new Error("User information is missing.");
+  }
+
+  const existingUser = await prisma.user.findUnique({
+    where: { email: req.user.email },
+  });
+
+  if (!existingUser) {
+    throw new ApiError(httpStatus.NOT_FOUND, "User doesn't exist");
+  }
+
+  const requestData = {
+    userId: req.user.userId,
+    ...req.body,
+  };
+
+  const result = await prisma.leaveRequest.create({
+    data: requestData,
+  });
+
+  console.log("From service request for a leave", result);
+  return result;
+};
+
 export const UserService = {
   createUserIntoDB,
   createUserProfileIntoDB,
+  requestForLeave,
 };

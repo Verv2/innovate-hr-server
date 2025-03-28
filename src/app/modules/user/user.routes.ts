@@ -25,4 +25,10 @@ router.post(
   UserController.createUserProfile
 );
 
+router.post(
+  "/request-for-leave",
+  auth(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.EMPLOYEE),
+  UserController.requestForLeave
+);
+
 export const UserRoutes = router;

@@ -14,16 +14,17 @@ datasource db {
 }
 
 model User {
-  id                 String     @id @default(uuid())
-  email              String     @unique
+  id                 String         @id @default(uuid())
+  email              String         @unique
   password           String
   role               UserRole
-  needPasswordChange Boolean    @default(true)
-  status             UserStatus @default(ACTIVE)
-  createdAt          DateTime   @default(now())
-  updatedAt          DateTime   @updatedAt
+  needPasswordChange Boolean        @default(true)
+  status             UserStatus     @default(ACTIVE)
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
   // admin              Admin?
   profile            Profile?
+  leaveRequest       LeaveRequest[]
 
   @@map("users")
 }
@@ -62,6 +63,20 @@ model ShiftOverride {
   @@map("shift_override")
 }
 
+model LeaveRequest {
+  id         String      @id @default(uuid())
+  userId     String
+  leaveType  LeaveType
+  leaveDates String[] // Only store an array of leave dates
+  status     LeaveStatus @default(PENDING)
+  reason     String?
+  user       User        @relation(fields: [userId], references: [id])
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+
+  @@map("leave_requests")
+}
+
 enum UserRole {
   SUPER_ADMIN
   ADMIN
@@ -72,4 +87,15 @@ enum UserStatus {
   ACTIVE
   BLOCKED
   DELETED
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum LeaveType {
+  SICK_LEAVE
+  ANNUAL_LEAVE
 }

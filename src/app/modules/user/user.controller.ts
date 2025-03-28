@@ -24,7 +24,18 @@ const createUserProfile = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const requestForLeave = catchAsync(async (req: Request, res: Response) => {
+  const result = await UserService.requestForLeave(req);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Your request has been sent successfully!",
+    data: result,
+  });
+});
+
 export const UserController = {
   createUser,
   createUserProfile,
+  requestForLeave,
 };
