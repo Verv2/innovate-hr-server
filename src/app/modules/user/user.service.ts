@@ -88,6 +88,35 @@ const createUserProfileIntoDB = async (req: Request & { user?: TUser }) => {
   return result;
 };
 
+const getAllUsersFromDB = async () => {
+  const result = await prisma.user.findMany({
+    include: {
+      profile: true,
+    },
+  });
+
+  return result;
+};
+
+const getMeFromDB = async (req: Request & { user?: TUser }) => {
+  console.log("getMe function called");
+  console.log(req.user?.userId);
+
+  const user = await prisma.user.findUnique({
+    where: { id: req.user?.userId },
+  });
+
+  const returnedUser = {
+    id: user?.id,
+    email: user?.email,
+    role: user?.role,
+    needPasswordChange: user?.needPasswordChange,
+    status: user?.status,
+  };
+
+  return returnedUser;
+};
+
 const requestForLeave = async (req: Request & { user?: TUser }) => {
   if (!req.user) {
     throw new Error("User information is missing.");
@@ -117,5 +146,7 @@ const requestForLeave = async (req: Request & { user?: TUser }) => {
 export const UserService = {
   createUserIntoDB,
   createUserProfileIntoDB,
+  getAllUsersFromDB,
+  getMeFromDB,
   requestForLeave,
 };

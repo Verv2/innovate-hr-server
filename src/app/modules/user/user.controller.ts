@@ -24,6 +24,28 @@ const createUserProfile = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getAllUsers = catchAsync(async (req: Request, res: Response) => {
+  const result = await UserService.getAllUsersFromDB();
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Users retrieval successful",
+    data: result,
+  });
+});
+
+const getMe = catchAsync(async (req: Request, res: Response) => {
+  const result = await UserService.getMeFromDB(req);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "My Data retrieval successful",
+    data: result,
+  });
+});
+
 const requestForLeave = catchAsync(async (req: Request, res: Response) => {
   const result = await UserService.requestForLeave(req);
   sendResponse(res, {
@@ -37,5 +59,7 @@ const requestForLeave = catchAsync(async (req: Request, res: Response) => {
 export const UserController = {
   createUser,
   createUserProfile,
+  getAllUsers,
+  getMe,
   requestForLeave,
 };
