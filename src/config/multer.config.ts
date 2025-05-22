@@ -8,15 +8,21 @@ const removeExtension = (filename: string) => {
 
 const storage = new CloudinaryStorage({
   cloudinary: cloudinaryUpload,
-  params: {
-    public_id: (_req, file) =>
-      Math.random().toString(36).substring(2) +
-      "-" +
-      Date.now() +
-      "-" +
-      file.fieldname +
-      "-" +
-      removeExtension(file.originalname),
+  params: async (_req, file) => {
+    return {
+      public_id:
+        Math.random().toString(36).substring(2) +
+        "-" +
+        Date.now() +
+        "-" +
+        file.fieldname +
+        "-" +
+        removeExtension(file.originalname),
+      folder: "innovate-hr",
+      access_mode: "public",
+      resource_type: "auto",
+      type: "upload",
+    };
   },
 });
 

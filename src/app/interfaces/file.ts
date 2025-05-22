@@ -23,7 +23,18 @@ export type ICloudinaryResponse = {
   api_key: string;
 };
 
-export type IFile = {
+// export type IFile = {
+//   fieldname: string;
+//   originalname: string;
+//   encoding: string;
+//   mimetype: string;
+//   destination: string;
+//   filename: string;
+//   path: string;
+//   size: number;
+// };
+
+export type IUploadFile = {
   fieldname: string;
   originalname: string;
   encoding: string;

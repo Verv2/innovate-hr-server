@@ -13,8 +13,34 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model Employees {
+  id            String         @id @default(uuid())
+  FirstName     String
+  MiddleName    String?
+  LastName      String
+  dateOfBirth   DateTime
+  gender        Gender
+  homeAddress   String
+  nationality   String
+  maritalStatus MaritalStatus?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  contactInformation      ContactInformation?
+  emergencyContact        EmergencyContact?
+  identificationDocuments IdentificationDocuments?
+  employmentDetails       EmploymentDetails?
+  financialInformation    FinancialInformation?
+  additionalDocuments     AdditionalDocuments[]
+
+  user User?
+
+  @@map("employees")
+}
+
 model User {
   id                 String         @id @default(uuid())
+  employeeId         String         @unique
   email              String         @unique
   password           String
   role               UserRole
@@ -25,8 +51,110 @@ model User {
   // admin              Admin?
   profile            Profile?
   leaveRequest       LeaveRequest[]
+  // employees          Employees?
+
+  employees Employees @relation(fields: [employeeId], references: [id])
 
   @@map("users")
+}
+
+model ContactInformation {
+  id                 String @id @default(uuid())
+  employeeId         String @unique
+  phoneNumber        String @unique
+  email              String @unique
+  residentialAddress String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  employee Employees @relation(fields: [employeeId], references: [id])
+
+  @@map("contact_information")
+}
+
+model EmergencyContact {
+  id           String @id @default(uuid())
+  employeeId   String @unique
+  name         String
+  relationship String
+  phoneNumber  String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  employee Employees @relation(fields: [employeeId], references: [id])
+
+  @@map("emergency_contact")
+}
+
+model IdentificationDocuments {
+  id                   String   @id @default(uuid())
+  employeeId           String   @unique
+  passportOrNationalId String
+  insuranceNumber      String
+  socialSecurityNumber String
+  visaExpiryDate       DateTime
+  taxIdNumber          String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  employee Employees @relation(fields: [employeeId], references: [id])
+
+  @@map("identification_documents")
+}
+
+model EmploymentDetails {
+  id               String       @id @default(uuid())
+  employeeId       String       @unique
+  employeeIdNumber String       @unique
+  jobTitle         String
+  department       String
+  dateOfJoining    DateTime
+  employmentType   EmployeeType
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  employee Employees @relation(fields: [employeeId], references: [id])
+
+  @@map("employment_details")
+}
+
+model FinancialInformation {
+  id                String             @id @default(uuid())
+  employeeId        String             @unique
+  bankName          String
+  accountNumber     String
+  accountHolder     String
+  bankAddress       String
+  sortCode          String
+  ibanOrSwfit       String
+  benefitEnrollment BenefitsEnrollment @default(NONE)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  employee Employees @relation(fields: [employeeId], references: [id])
+
+  @@map("financial_information")
+}
+
+model AdditionalDocuments {
+  id                       String   @id @default(uuid())
+  employeeId               String
+  signedContractPaperwork  String
+  educationalCertificates  String[]
+  professionalCertificates String?
+  recentPhotograph         String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  employee Employees @relation(fields: [employeeId], references: [id])
+
+  @@map("additional_documents")
 }
 
 model Profile {
@@ -80,7 +208,33 @@ model LeaveRequest {
 enum UserRole {
   SUPER_ADMIN
   ADMIN
+  MANAGER
   EMPLOYEE
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum MaritalStatus {
+  SINGLE
+  MARRIED
+  DIVORCED
+  WIDOWED
+}
+
+enum EmployeeType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+}
+
+enum BenefitsEnrollment {
+  NONE
+  HEALTH_INSURANCE
+  PENSION
 }
 
 enum UserStatus {
