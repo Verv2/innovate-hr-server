@@ -15,6 +15,17 @@ const addEmployee = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const addTemporaryEmployee = catchAsync(async (req: Request, res: Response) => {
+  const result = await EmployeeService.addTemporaryEmployeeIntoDB(req);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Employee has been added successfully!",
+    data: result,
+  });
+});
+
 export const EmployeeController = {
   addEmployee,
+  addTemporaryEmployee,
 };

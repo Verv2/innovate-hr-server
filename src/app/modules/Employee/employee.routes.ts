@@ -23,4 +23,22 @@ router.post(
   EmployeeController.addEmployee
 );
 
+router.post(
+  "/add-temporary-employee",
+  auth(UserRole.ADMIN),
+  // validateRequest(UserValidation.createUserValidationSchema),
+  multerUpload.fields([
+    { name: "passportOrNationalId", maxCount: 1 },
+    { name: "signedContractPaperwork", maxCount: 1 },
+    { name: "recentPhotograph", maxCount: 1 },
+    { name: "educationalCertificates", maxCount: 2 },
+    { name: "professionalCertificates", maxCount: 2 },
+  ]),
+  (req: Request, res: Response, next: NextFunction) => {
+    req.body = JSON.parse(req.body.data);
+    next();
+  },
+  EmployeeController.addTemporaryEmployee
+);
+
 export const EmployeeRoutes = router;
