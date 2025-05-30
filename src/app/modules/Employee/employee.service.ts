@@ -1,6 +1,6 @@
 import { Request } from "express";
 import prisma from "../../../shared/prisma";
-import { TEmployee } from "./employee.interface";
+import { TEmployee, TemporaryEmployeeData } from "./employee.interface";
 import { IUploadFile } from "../../interfaces/file";
 
 const addEmployeeIntoDB = async (req: Request) => {
@@ -59,20 +59,32 @@ const addTemporaryEmployeeIntoDB = async (
 
   const data = req.body;
 
-  const mergedData = {
-    ...(typeof existingTemporary?.data === "object" &&
+  const existingData = (
+    typeof existingTemporary?.data === "object" &&
     existingTemporary?.data !== null
-      ? existingTemporary.data
-      : {}),
-    ...data,
-    passportOrNationalIdUrl: passportOrNationalIdFile?.path,
-    signedContractPaperworkUrl: signedContractPaperworkFile?.path,
-    recentPhotographUrl: recentPhotographFile?.path,
-    educationalCertificatesUrl: arrEducationalCertificates,
-    professionalCertificatesUrl: arrProfessionalCertificates,
-  };
+      ? (existingTemporary.data as TemporaryEmployeeData)
+      : {}
+  ) as TemporaryEmployeeData;
 
-  // console.log("mergedData", mergedData);
+  const mergedData = {
+    ...existingData,
+    ...data,
+    passportOrNationalIdUrl:
+      passportOrNationalIdFile?.path ?? existingData.passportOrNationalIdUrl,
+    signedContractPaperworkUrl:
+      signedContractPaperworkFile?.path ??
+      existingData.signedContractPaperworkUrl,
+    recentPhotographUrl:
+      recentPhotographFile?.path ?? existingData.recentPhotographUrl,
+    educationalCertificatesUrl:
+      arrEducationalCertificates.length > 0
+        ? arrEducationalCertificates
+        : existingData.educationalCertificatesUrl ?? [],
+    professionalCertificatesUrl:
+      arrProfessionalCertificates.length > 0
+        ? arrProfessionalCertificates
+        : existingData.professionalCertificatesUrl ?? [],
+  };
 
   const result = await prisma.temporaryEmployee.upsert({
     where: { userId },
@@ -92,9 +104,18 @@ const addTemporaryEmployeeIntoDB = async (
   return result;
 };
 
+const getTemporaryEmployeeFromDB = async (userId: string) => {
+  const result = await prisma.temporaryEmployee.findUnique({
+    where: { userId },
+  });
+
+  return result;
+};
+
 export const EmployeeService = {
   addEmployeeIntoDB,
   addTemporaryEmployeeIntoDB,
+  getTemporaryEmployeeFromDB,
 };
 
 // const employee = {

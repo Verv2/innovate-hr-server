@@ -6,6 +6,12 @@ import { multerUpload } from "../../../config/multer.config";
 
 const router = express.Router();
 
+router.get(
+  "/get-temporary-employee",
+  auth(UserRole.ADMIN),
+  EmployeeController.getTemporaryEmployee
+);
+
 router.post(
   "/add-employee",
   //   auth(UserRole.ADMIN),

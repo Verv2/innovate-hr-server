@@ -25,7 +25,25 @@ const addTemporaryEmployee = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getTemporaryEmployee = catchAsync(
+  async (req: Request & { user?: { userId: string } }, res: Response) => {
+    const userId = req.user?.userId;
+
+    const result = await EmployeeService.getTemporaryEmployeeFromDB(
+      userId as string
+    );
+
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: "Temporary Employee data retrieval successfully",
+      data: result,
+    });
+  }
+);
+
 export const EmployeeController = {
   addEmployee,
   addTemporaryEmployee,
+  getTemporaryEmployee,
 };

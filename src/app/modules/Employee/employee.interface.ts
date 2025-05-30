@@ -10,3 +10,12 @@ export type TEmployee = {
   nationality: string;
   maritalStatus?: MaritalStatus;
 };
+
+export type TemporaryEmployeeData = {
+  passportOrNationalIdUrl?: string;
+  signedContractPaperworkUrl?: string;
+  recentPhotographUrl?: string;
+  educationalCertificatesUrl?: string[];
+  professionalCertificatesUrl?: string[];
+  [key: string]: any;
+};
