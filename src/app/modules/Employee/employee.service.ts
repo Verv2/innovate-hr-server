@@ -1,20 +1,121 @@
 import { Request } from "express";
 import prisma from "../../../shared/prisma";
-import { TEmployee, TemporaryEmployeeData } from "./employee.interface";
+import {
+  TAdditionalDocuments,
+  TCombinedContact,
+  TContactInformation,
+  TEmergencyContact,
+  TEmployee,
+  TEmployeeDetails,
+  TemporaryEmployeeData,
+  TFinancialInformation,
+  TFullEmployeeData,
+  TIdentificationDocuments,
+} from "./employee.interface";
 import { IUploadFile } from "../../interfaces/file";
+import ApiError from "../../errors/ApiErrors";
+import httpStatus from "http-status";
 
-const addEmployeeIntoDB = async (req: Request) => {
-  const { image, passport, nationalId, certificate } = req.files as {
-    [fieldname: string]: Express.Multer.File[];
+const addEmployeeIntoDB = async (
+  req: Request & { user?: { userId: string } }
+) => {
+  const userId = req.user?.userId as string;
+  const existingTemporary = await prisma.temporaryEmployee.findUnique({
+    where: { userId },
+  });
+
+  if (!existingTemporary) {
+    throw new ApiError(
+      httpStatus.NOT_FOUND,
+      "No temporary employee data found"
+    );
+  }
+
+  const fullData = existingTemporary.data as unknown as TFullEmployeeData;
+
+  const basicInfo: TEmployee = fullData.basicInfo;
+  const combineContactInformation: TCombinedContact =
+    fullData.contactInformation;
+
+  const contactInformation: TContactInformation = {
+    phoneNumber: combineContactInformation.phoneNumber,
+    email: combineContactInformation.email,
+    residentialAddress: combineContactInformation.residentialAddress,
   };
 
-  const data: TEmployee = req.body.data;
+  const emergencyContact: TEmergencyContact = {
+    name: combineContactInformation.name,
+    relationship: combineContactInformation.relationship,
+    emergencyPhoneNumber: combineContactInformation.emergencyPhoneNumber,
+  };
 
-  console.log("data", data);
-  console.log("image", image);
-  console.log("passport", passport);
-  console.log("nationalId", nationalId);
-  console.log("certificate", certificate);
+  const identificationDocuments: TIdentificationDocuments = {
+    ...fullData.identificationDocuments,
+    passportOrNationalId: fullData.passportOrNationalIdUrl,
+  };
+
+  const employeeDetails: TEmployeeDetails = fullData.employeeDetails;
+  const financialInformation: TFinancialInformation =
+    fullData.financialInformation;
+
+  const additionalDocuments: TAdditionalDocuments = {
+    signedContractPaperwork: fullData.signedContractPaperworkUrl,
+    educationalCertificates: fullData.educationalCertificatesUrl,
+    professionalCertificates: fullData?.professionalCertificatesUrl ?? [],
+    recentPhotograph: fullData?.recentPhotographUrl,
+  };
+
+  const result = await prisma.$transaction(async (tx) => {
+    const existingUser = await prisma.user.findUnique({
+      where: { email: contactInformation.email },
+    });
+
+    if (existingUser) {
+      throw new ApiError(httpStatus.CONFLICT, "User already exists");
+    }
+
+    const user = await tx.user.create({
+      data: { email: contactInformation.email },
+    });
+
+    const employee = await tx.employees.create({
+      data: { ...basicInfo, userId: user.id },
+    });
+
+    await tx.contactInformation.create({
+      data: { ...contactInformation, employeeId: employee.id },
+    });
+
+    await tx.emergencyContact.create({
+      data: { ...emergencyContact, employeeId: employee.id },
+    });
+
+    await tx.identificationDocuments.create({
+      data: { ...identificationDocuments, employeeId: employee.id },
+    });
+
+    await tx.employmentDetails.create({
+      data: { ...employeeDetails, employeeId: employee.id },
+    });
+
+    await tx.financialInformation.create({
+      data: { ...financialInformation, employeeId: employee.id },
+    });
+
+    await tx.additionalDocuments.create({
+      data: { ...additionalDocuments, employeeId: employee.id },
+    });
+
+    return employee;
+  });
+
+  // await prisma.temporaryEmployee.delete({
+  //   where: {
+  //     userId: userId,
+  //   },
+  // });
+
+  return result;
 };
 
 const addTemporaryEmployeeIntoDB = async (
