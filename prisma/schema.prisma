@@ -40,6 +40,7 @@ model Employees {
   homeAddress   String
   nationality   String
   maritalStatus MaritalStatus?
+  isDeleted     Boolean        @default(false)
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
 
@@ -247,6 +248,7 @@ enum BenefitsEnrollment {
 
 enum UserStatus {
   ACTIVE
+  IN_PROGRESS
   BLOCKED
   DELETED
 }

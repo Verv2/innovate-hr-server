@@ -4,6 +4,8 @@ import sendResponse from "../../../shared/sendResponse";
 import { EmployeeService } from "./employee.service";
 import httpStatus from "http-status";
 import { TEmployee } from "./employee.interface";
+import pick from "../../../shared/pick";
+import { employeeFilterableFields } from "./employee.constant";
 
 const addEmployee = catchAsync(async (req: Request, res: Response) => {
   const result = await EmployeeService.addEmployeeIntoDB(req);
@@ -42,8 +44,36 @@ const getTemporaryEmployee = catchAsync(
   }
 );
 
+const getAllEmployees = catchAsync(async (req: Request, res: Response) => {
+  const filters = pick(req.query, employeeFilterableFields);
+  const options = pick(req.query, ["limit", "page", "sortBy", "sortOrder"]);
+
+  const result = await EmployeeService.getAllEmployeesFromDB(filters, options);
+
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Employees retrieval successfully",
+    meta: result.meta,
+    data: result.data,
+  });
+});
+
+const getEmployeeById = catchAsync(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const result = await EmployeeService.getEmployeeByIdFromDB(id);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Employee retrieval successfully",
+    data: result,
+  });
+});
+
 export const EmployeeController = {
   addEmployee,
   addTemporaryEmployee,
   getTemporaryEmployee,
+  getAllEmployees,
+  getEmployeeById,
 };

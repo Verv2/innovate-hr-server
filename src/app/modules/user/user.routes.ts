@@ -16,14 +16,20 @@ router.get(
 
 router.get(
   "/me",
-  auth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
+  auth(
+    UserRole.ADMIN,
+    UserRole.SUPER_ADMIN,
+    UserRole.MANAGER,
+    UserRole.EMPLOYEE
+  ),
   UserController.getMe
 );
 
 router.post(
-  "/create-user",
-  validateRequest(UserValidation.createUserValidationSchema),
-  UserController.createUser
+  "/send-invitation",
+  auth(UserRole.ADMIN, UserRole.SUPER_ADMIN),
+  // validateRequest(UserValidation.createUserValidationSchema),
+  UserController.sendInvitation
 );
 
 router.post(

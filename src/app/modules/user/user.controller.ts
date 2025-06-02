@@ -4,13 +4,15 @@ import httpStatus from "http-status";
 import sendResponse from "../../../shared/sendResponse";
 import { UserService } from "./user.service";
 
-const createUser = catchAsync(async (req: Request, res: Response) => {
-  const result = await UserService.createUserIntoDB(req);
+const sendInvitation = catchAsync(async (req: Request, res: Response) => {
+  const result = await UserService.sendInvitationToUser(req);
+  const { password, ...resultData } = result;
+
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "User is created successfully!",
-    data: result,
+    message: "Invitation has been sent",
+    data: resultData,
   });
 });
 
@@ -57,7 +59,7 @@ const requestForLeave = catchAsync(async (req: Request, res: Response) => {
 });
 
 export const UserController = {
-  createUser,
+  sendInvitation,
   createUserProfile,
   getAllUsers,
   getMe,

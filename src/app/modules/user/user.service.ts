@@ -7,18 +7,23 @@ import * as bcrypt from "bcrypt";
 import config from "../../../config";
 import emailSender from "../../../helpers/emailSender";
 import { TUser } from "./user.interface";
+import { UserStatus } from "@prisma/client";
+import { accountCreatedTemplate } from "../../../helpers/emailTemplate";
 
-const createUserIntoDB = async (req: Request) => {
+const sendInvitationToUser = async (req: Request) => {
   console.log(req.body);
 
   const existingUser = await prisma.user.findUnique({
     where: {
-      email: req.body.email,
+      id: req.body.userId,
     },
   });
 
-  if (existingUser) {
-    throw new ApiError(httpStatus.CONFLICT, "User already exists");
+  if (existingUser && existingUser.status !== UserStatus.IN_PROGRESS) {
+    throw new ApiError(
+      httpStatus.CONFLICT,
+      "User already exists with status other than IN_PROGRESS"
+    );
   }
 
   const generatePassword: string = generate({
@@ -38,22 +43,25 @@ const createUserIntoDB = async (req: Request) => {
     email: req.body.email,
     password: hashedPassword,
     role: req.body.role,
+    status: UserStatus.ACTIVE, // Assume we promote to ACTIVE after updating
   };
 
-  const result = await prisma.user.create({
-    data: userData,
-  });
+  let result;
 
-  await emailSender(
-    userData.email,
-    ` 
-    <div>
-      <p>Dear User,</p>
-      <p>Your account has been created. Please login with the password: ${generatePassword}</p>
-      <p>Please do not share the password with anyone</p>
-    </div>
-    `
-  );
+  if (existingUser) {
+    // Update existing user with IN_PROGRESS status
+    result = await prisma.user.update({
+      where: { id: req.body.userId },
+      data: userData,
+    });
+  } else {
+    // Create new user
+    result = await prisma.user.create({
+      data: userData,
+    });
+  }
+
+  await emailSender(userData.email, accountCreatedTemplate(generatePassword));
 
   return result;
 };
@@ -144,7 +152,7 @@ const requestForLeave = async (req: Request & { user?: TUser }) => {
 };
 
 export const UserService = {
-  createUserIntoDB,
+  sendInvitationToUser,
   createUserProfileIntoDB,
   getAllUsersFromDB,
   getMeFromDB,

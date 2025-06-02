@@ -15,6 +15,10 @@ import {
 import { IUploadFile } from "../../interfaces/file";
 import ApiError from "../../errors/ApiErrors";
 import httpStatus from "http-status";
+import { IPaginationOptions } from "../../interfaces/pagination";
+import { paginationHelper } from "../../../helpers/paginationHelper";
+import { Employees, Prisma } from "@prisma/client";
+import { employeeSearchableFields } from "./employee.constant";
 
 const addEmployeeIntoDB = async (
   req: Request & { user?: { userId: string } }
@@ -75,7 +79,7 @@ const addEmployeeIntoDB = async (
     }
 
     const user = await tx.user.create({
-      data: { email: contactInformation.email },
+      data: { email: contactInformation.email, status: "IN_PROGRESS" },
     });
 
     const employee = await tx.employees.create({
@@ -109,11 +113,11 @@ const addEmployeeIntoDB = async (
     return employee;
   });
 
-  // await prisma.temporaryEmployee.delete({
-  //   where: {
-  //     userId: userId,
-  //   },
-  // });
+  await prisma.temporaryEmployee.delete({
+    where: {
+      userId: userId,
+    },
+  });
 
   return result;
 };
@@ -213,10 +217,101 @@ const getTemporaryEmployeeFromDB = async (userId: string) => {
   return result;
 };
 
+const getAllEmployeesFromDB = async (
+  filters: any,
+  options: IPaginationOptions
+) => {
+  const { limit, page, skip } = paginationHelper.calculatePagination(options);
+  const { searchTerm, ...filterData } = filters;
+
+  const andConditions: Prisma.EmployeesWhereInput[] = [];
+
+  if (searchTerm) {
+    andConditions.push({
+      OR: employeeSearchableFields.map((field) => ({
+        [field]: {
+          contains: searchTerm,
+          mode: "insensitive",
+        },
+      })),
+    });
+  }
+
+  if (Object.keys(filterData).length > 0) {
+    andConditions.push({
+      AND: Object.keys(filterData).map((key) => {
+        return {
+          [key]: {
+            equals: (filterData as any)[key],
+          },
+        };
+      }),
+    });
+  }
+  andConditions.push({
+    isDeleted: false,
+  });
+
+  const whereConditions: Prisma.EmployeesWhereInput =
+    andConditions.length > 0 ? { AND: andConditions } : {};
+
+  const result = await prisma.employees.findMany({
+    where: whereConditions,
+    skip,
+    take: limit,
+    orderBy:
+      options.sortBy && options.sortOrder
+        ? { [options.sortBy]: options.sortOrder }
+        : { createdAt: "desc" },
+    include: {
+      contactInformation: true,
+      emergencyContact: true,
+      identificationDocuments: true,
+      employmentDetails: true,
+      financialInformation: true,
+      additionalDocuments: true,
+      // user: true,
+    },
+  });
+
+  const total = await prisma.employees.count({
+    where: whereConditions,
+  });
+
+  return {
+    meta: {
+      total,
+      page,
+      limit,
+    },
+    data: result,
+  };
+};
+
+const getEmployeeByIdFromDB = async (id: string): Promise<Employees | null> => {
+  const result = await prisma.employees.findUnique({
+    where: {
+      id,
+    },
+    include: {
+      contactInformation: true,
+      emergencyContact: true,
+      identificationDocuments: true,
+      employmentDetails: true,
+      financialInformation: true,
+      additionalDocuments: true,
+      // user: true,
+    },
+  });
+  return result;
+};
+
 export const EmployeeService = {
   addEmployeeIntoDB,
   addTemporaryEmployeeIntoDB,
   getTemporaryEmployeeFromDB,
+  getAllEmployeesFromDB,
+  getEmployeeByIdFromDB,
 };
 
 // const employee = {
