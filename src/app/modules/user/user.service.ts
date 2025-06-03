@@ -7,8 +7,9 @@ import * as bcrypt from "bcrypt";
 import config from "../../../config";
 import emailSender from "../../../helpers/emailSender";
 import { TUser } from "./user.interface";
-import { UserStatus } from "@prisma/client";
+import { Prisma, UserStatus } from "@prisma/client";
 import { accountCreatedTemplate } from "../../../helpers/emailTemplate";
+import { userSearchAbleFields } from "./user.constant";
 
 const sendInvitationToUser = async (req: Request) => {
   console.log(req.body);
@@ -96,10 +97,61 @@ const createUserProfileIntoDB = async (req: Request & { user?: TUser }) => {
   return result;
 };
 
-const getAllUsersFromDB = async () => {
+const getAllUsersFromDB = async (filters: any) => {
+  const { searchTerm, ...filterData } = filters;
+
+  const andConditions: Prisma.UserWhereInput[] = [];
+
+  if (searchTerm) {
+    andConditions.push({
+      OR: userSearchAbleFields.map((field) => ({
+        [field]: {
+          contains: searchTerm,
+          mode: "insensitive",
+        },
+      })),
+    });
+  }
+
+  if (Object.keys(filterData).length > 0) {
+    andConditions.push({
+      AND: Object.keys(filterData).map((key) => {
+        return {
+          [key]: {
+            equals: (filterData as any)[key],
+          },
+        };
+      }),
+    });
+  }
+  andConditions.push({
+    isDeleted: false,
+  });
+
+  const whereConditions: Prisma.UserWhereInput =
+    andConditions.length > 0 ? { AND: andConditions } : {};
+
   const result = await prisma.user.findMany({
-    include: {
-      profile: true,
+    where: whereConditions,
+    select: {
+      id: true,
+      email: true,
+      role: true,
+      status: true,
+      employees: {
+        select: {
+          id: true,
+          userId: true,
+          firstName: true,
+          middleName: true,
+          lastName: true,
+          additionalDocuments: {
+            select: {
+              recentPhotograph: true,
+            },
+          },
+        },
+      },
     },
   });
 

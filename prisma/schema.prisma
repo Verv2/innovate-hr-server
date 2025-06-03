@@ -20,6 +20,7 @@ model User {
   role               UserRole?
   needPasswordChange Boolean        @default(true)
   status             UserStatus     @default(ACTIVE)
+  isDeleted          Boolean        @default(false)
   createdAt          DateTime       @default(now())
   updatedAt          DateTime       @updatedAt
   profile            Profile?
@@ -49,7 +50,7 @@ model Employees {
   identificationDocuments IdentificationDocuments?
   employmentDetails       EmploymentDetails?
   financialInformation    FinancialInformation?
-  additionalDocuments     AdditionalDocuments[]
+  additionalDocuments     AdditionalDocuments?
 
   user User @relation(fields: [userId], references: [id])
 
@@ -141,7 +142,7 @@ model FinancialInformation {
 
 model AdditionalDocuments {
   id                       String   @id @default(uuid())
-  employeeId               String
+  employeeId               String   @unique
   signedContractPaperwork  String
   educationalCertificates  String[]
   professionalCertificates String[]

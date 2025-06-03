@@ -3,6 +3,8 @@ import catchAsync from "../../../shared/catchAsync";
 import httpStatus from "http-status";
 import sendResponse from "../../../shared/sendResponse";
 import { UserService } from "./user.service";
+import pick from "../../../shared/pick";
+import { userFilterableFields } from "./user.constant";
 
 const sendInvitation = catchAsync(async (req: Request, res: Response) => {
   const result = await UserService.sendInvitationToUser(req);
@@ -27,7 +29,9 @@ const createUserProfile = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getAllUsers = catchAsync(async (req: Request, res: Response) => {
-  const result = await UserService.getAllUsersFromDB();
+  const filters = pick(req.query, userFilterableFields);
+
+  const result = await UserService.getAllUsersFromDB(filters);
 
   sendResponse(res, {
     statusCode: httpStatus.OK,
