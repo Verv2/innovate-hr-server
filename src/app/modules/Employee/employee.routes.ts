@@ -11,13 +11,14 @@ router.get(
   // auth(UserRole.ADMIN),
   EmployeeController.getAllEmployees
 );
-router.get("/:id", auth(UserRole.ADMIN), EmployeeController.getEmployeeById);
 
 router.get(
   "/get-temporary-employee",
   auth(UserRole.ADMIN),
   EmployeeController.getTemporaryEmployee
 );
+
+router.get("/:id", auth(UserRole.ADMIN), EmployeeController.getEmployeeById);
 
 router.post(
   "/add-employee",
