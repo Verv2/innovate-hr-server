@@ -164,17 +164,26 @@ const getMeFromDB = async (req: Request & { user?: TUser }) => {
 
   const user = await prisma.user.findUnique({
     where: { id: req.user?.userId },
+    select: {
+      id: true,
+      email: true,
+      role: true,
+      status: true,
+      needPasswordChange: true,
+      employees: {
+        include: {
+          contactInformation: true,
+          emergencyContact: true,
+          identificationDocuments: true,
+          employmentDetails: true,
+          financialInformation: true,
+          additionalDocuments: true,
+        },
+      },
+    },
   });
 
-  const returnedUser = {
-    id: user?.id,
-    email: user?.email,
-    role: user?.role,
-    needPasswordChange: user?.needPasswordChange,
-    status: user?.status,
-  };
-
-  return returnedUser;
+  return user;
 };
 
 const requestForLeave = async (req: Request & { user?: TUser }) => {
