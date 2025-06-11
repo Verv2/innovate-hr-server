@@ -35,8 +35,21 @@ const getLeavesOnToday = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getAllRequestedLeaves = catchAsync(
+  async (req: Request, res: Response) => {
+    const result = await LeaveService.getAllRequestedLeavesFromDB();
+    sendResponse(res, {
+      statusCode: httpStatus.OK,
+      success: true,
+      message: "All requested leaves have been retrieved!",
+      data: result,
+    });
+  }
+);
+
 export const LeaveController = {
   requestForLeave,
   approveLeaveRequest,
   getLeavesOnToday,
+  getAllRequestedLeaves,
 };

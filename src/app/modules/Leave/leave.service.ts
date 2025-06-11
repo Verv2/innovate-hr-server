@@ -178,9 +178,31 @@ const updateOnGoingLeaves = async () => {
   console.log("Checked and updated leave requests");
 };
 
+const getAllRequestedLeavesFromDB = async () => {
+  console.log("Get All Requested Leave service");
+  const result = await prisma.leaveRequest.findMany({
+    where: {
+      status: "PENDING",
+    },
+    include: {
+      employee: {
+        include: {
+          contactInformation: true,
+          employmentDetails: true,
+          additionalDocuments: true,
+          employeeLeaves: true,
+        },
+      },
+    },
+  });
+
+  return result;
+};
+
 export const LeaveService = {
   requestForLeave,
   approveLeaveRequest,
   getLeavesOnTodayFormDB,
   updateOnGoingLeaves,
+  getAllRequestedLeavesFromDB,
 };

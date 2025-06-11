@@ -6,6 +6,12 @@ import { LeaveController } from "./leave.controller";
 const router = express.Router();
 
 router.get(
+  "/",
+  auth(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.MANAGER),
+  LeaveController.getAllRequestedLeaves
+);
+
+router.get(
   "/leaves-on-today",
   auth(
     UserRole.SUPER_ADMIN,
