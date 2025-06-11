@@ -27,6 +27,28 @@ const addTemporaryEmployee = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const updateShift = catchAsync(async (req: Request, res: Response) => {
+  const payload = req.body;
+
+  const result = await EmployeeService.updateShiftIntoDB(payload);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "New Shift has been added",
+    data: result,
+  });
+});
+
+const requestForLeave = catchAsync(async (req: Request, res: Response) => {
+  const result = await EmployeeService.requestForLeave(req);
+  sendResponse(res, {
+    statusCode: httpStatus.OK,
+    success: true,
+    message: "Your request has been sent successfully!",
+    data: result,
+  });
+});
+
 const getTemporaryEmployee = catchAsync(
   async (req: Request & { user?: { userId: string } }, res: Response) => {
     const userId = req.user?.userId;
@@ -73,6 +95,8 @@ const getEmployeeById = catchAsync(async (req: Request, res: Response) => {
 export const EmployeeController = {
   addEmployee,
   addTemporaryEmployee,
+  updateShift,
+  requestForLeave,
   getTemporaryEmployee,
   getAllEmployees,
   getEmployeeById,

@@ -27,6 +27,17 @@ router.post(
 );
 
 router.post(
+  "/update-shift",
+  // auth(
+  //   UserRole.SUPER_ADMIN,
+  //   UserRole.ADMIN,
+  //   UserRole.MANAGER,
+  //   UserRole.EMPLOYEE
+  // ),
+  EmployeeController.updateShift
+);
+
+router.post(
   "/add-temporary-employee",
   auth(UserRole.ADMIN),
   // validateRequest(UserValidation.createUserValidationSchema),
@@ -42,6 +53,17 @@ router.post(
     next();
   },
   EmployeeController.addTemporaryEmployee
+);
+
+router.post(
+  "/leave-request",
+  auth(
+    UserRole.SUPER_ADMIN,
+    UserRole.ADMIN,
+    UserRole.MANAGER,
+    UserRole.EMPLOYEE
+  ),
+  EmployeeController.requestForLeave
 );
 
 export const EmployeeRoutes = router;

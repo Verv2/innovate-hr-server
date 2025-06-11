@@ -88,3 +88,9 @@ export type TFullEmployeeData = {
   signedContractPaperworkUrl: string;
   professionalCertificatesUrl?: string[];
 };
+
+export type TShift = {
+  employeeId: string;
+  shiftStart: string;
+  shiftEnd: string;
+};

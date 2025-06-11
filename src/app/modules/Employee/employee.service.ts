@@ -11,6 +11,7 @@ import {
   TFinancialInformation,
   TFullEmployeeData,
   TIdentificationDocuments,
+  TShift,
 } from "./employee.interface";
 import { IUploadFile } from "../../interfaces/file";
 import ApiError from "../../errors/ApiErrors";
@@ -19,6 +20,7 @@ import { IPaginationOptions } from "../../interfaces/pagination";
 import { paginationHelper } from "../../../helpers/paginationHelper";
 import { Employees, Prisma } from "@prisma/client";
 import { employeeSearchableFields } from "./employee.constant";
+import { TUser } from "../User/user.interface";
 
 const addEmployeeIntoDB = async (
   req: Request & { user?: { userId: string } }
@@ -108,6 +110,20 @@ const addEmployeeIntoDB = async (
 
     await tx.additionalDocuments.create({
       data: { ...additionalDocuments, employeeId: employee.id },
+    });
+
+    await tx.shift.create({
+      data: {
+        employeeId: employee.id,
+        shiftStart: "09:00AM",
+        shiftEnd: "05:00PM",
+      },
+    });
+
+    await tx.employeeLeaves.create({
+      data: {
+        employeeId: employee.id,
+      },
     });
 
     return employee;
@@ -209,6 +225,63 @@ const addTemporaryEmployeeIntoDB = async (
   return result;
 };
 
+const updateShiftIntoDB = async (payload: TShift) => {
+  const existingEmployee = await prisma.employees.findUnique({
+    where: { id: payload.employeeId },
+  });
+
+  if (!existingEmployee) {
+    throw new ApiError(httpStatus.CONFLICT, "Employee doesn't exists!!");
+  }
+
+  const shiftData = {
+    shiftStart: payload.shiftStart,
+    shiftEnd: payload.shiftEnd,
+  };
+  const result = await prisma.shift.update({
+    where: { employeeId: payload.employeeId },
+    data: shiftData,
+  });
+
+  return result;
+};
+
+const requestForLeave = async (req: Request & { user?: TUser }) => {
+  if (!req.user) {
+    throw new Error("User information is missing.");
+  }
+
+  const existingUser = await prisma.user.findUnique({
+    where: { email: req.user.email },
+  });
+
+  if (!existingUser) {
+    throw new ApiError(httpStatus.NOT_FOUND, "User doesn't exist");
+  }
+
+  const existingEmployee = await prisma.employees.findUnique({
+    where: { userId: existingUser.id },
+  });
+
+  if (!existingEmployee) {
+    throw new ApiError(httpStatus.NOT_FOUND, "Employee doesn't exist");
+  }
+
+  const requestData = {
+    employeeId: existingEmployee.id,
+    ...req.body,
+  };
+
+  const result = await prisma.leaveRequest.create({
+    data: requestData,
+  });
+
+  console.log("From service request for a leave", result);
+  return result;
+};
+
+// get
+
 const getTemporaryEmployeeFromDB = async (userId: string) => {
   const result = await prisma.temporaryEmployee.findUnique({
     where: { userId },
@@ -270,6 +343,9 @@ const getAllEmployeesFromDB = async (
       employmentDetails: true,
       financialInformation: true,
       additionalDocuments: true,
+      shift: true,
+      employeeLeaves: true,
+      leaveRequest: true,
       // user: true,
     },
   });
@@ -309,6 +385,8 @@ const getEmployeeByIdFromDB = async (id: string): Promise<Employees | null> => {
 export const EmployeeService = {
   addEmployeeIntoDB,
   addTemporaryEmployeeIntoDB,
+  updateShiftIntoDB,
+  requestForLeave,
   getTemporaryEmployeeFromDB,
   getAllEmployeesFromDB,
   getEmployeeByIdFromDB,
