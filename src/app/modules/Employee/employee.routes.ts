@@ -14,7 +14,7 @@ router.get(
 
 router.get(
   "/get-temporary-employee",
-  auth(UserRole.ADMIN),
+  auth(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.MANAGER),
   EmployeeController.getTemporaryEmployee
 );
 
@@ -39,7 +39,7 @@ router.post(
 
 router.post(
   "/add-temporary-employee",
-  auth(UserRole.ADMIN),
+  auth(UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.MANAGER),
   // validateRequest(UserValidation.createUserValidationSchema),
   multerUpload.fields([
     { name: "passportOrNationalId", maxCount: 1 },
