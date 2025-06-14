@@ -125,7 +125,7 @@ const getLeavesOnTodayFormDB = async () => {
       },
     },
     include: {
-      employee: true,
+      employee: { include: { employeeLeaves: true } },
     },
   });
 
